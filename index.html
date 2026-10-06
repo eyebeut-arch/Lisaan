@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#0a1020">
+<title>Lisaan</title>
+<style>
+@font-face{
+  font-family:"ArabicText";
+  src:local("Amiri"),local("Noto Naskh Arabic"),local("Droid Arabic Naskh"),local("Traditional Arabic");
+  unicode-range:U+0600-06FF,U+0750-077F,U+FB50-FDFF,U+FE70-FEFF;
+}
+:root{
+  --nuit:#0a1020;
+  --encre:#111a31;
+  --encre2:#18233f;
+  --trait:rgba(212,175,55,.2);
+  --or:#d4af37;
+  --or-clair:#f1dd9c;
+  --sable:#ebe6d6;
+  --brume:#9aa3b8;
+  --ok:#5fd38d;
+  --alerte:#ff7a7a;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0}
+body{
+  display:flex;flex-direction:column;overflow:hidden;
+  background-color:var(--nuit);
+  background-image:
+    radial-gradient(900px 420px at 50% -8%,rgba(212,175,55,.13),transparent 62%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='72' viewBox='0 0 72 72'%3E%3Cg fill='none' stroke='%23d4af37' stroke-opacity='.07'%3E%3Crect x='18' y='18' width='36' height='36'/%3E%3Crect x='18' y='18' width='36' height='36' transform='rotate(45 36 36)'/%3E%3C/g%3E%3C/svg%3E");
+  color:var(--sable);
+  font-family:"ArabicText",var(--sans);
+  font-size:16px;
+}
+button,textarea,input{font-family:inherit}
+:focus-visible{outline:2px solid var(--or-clair);outline-offset:2px}
+
+/* En-tête */
+header{
+  display:flex;align-items:center;gap:12px;
+  padding:calc(env(safe-area-inset-top) + 10px) 16px 10px;
+  border-bottom:1px solid var(--trait);
+  background:rgba(10,16,32,.86);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+}
+.emblem{width:36px;height:36px;flex:none}
+.brand{display:flex;flex-direction:column;line-height:1.15}
+.brand b{
+  font-size:19px;font-weight:700;
+  background:linear-gradient(90deg,var(--or-clair),var(--or));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.brand span{font-size:12.5px;color:var(--brume)}
+.grow{flex:1}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--ok);box-shadow:0 0 9px var(--ok)}
+.dot.off{background:var(--alerte);box-shadow:0 0 9px var(--alerte)}
+.iconbtn{
+  width:40px;height:40px;border-radius:13px;display:grid;place-items:center;
+  border:1px solid var(--trait);background:var(--encre);color:var(--or-clair);
+}
+.iconbtn svg{width:20px;height:20px}
+#offline{
+  display:none;padding:7px 16px;font-size:13px;text-align:center;
+  background:rgba(255,122,122,.12);color:var(--alerte);border-bottom:1px solid rgba(255,122,122,.25);
+}
+#offline.show{display:block}
+
+/* Vues */
+main{flex:1;position:relative;min-height:0}
+.view{position:absolute;inset:0;display:none;flex-direction:column}
+.view.active{display:flex}
+.scroll{flex:1;overflow-y:auto;padding:18px 16px 24px}
+
+/* Chat */
+#msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+.b{
+  max-width:88%;padding:11px 14px;border-radius:18px;
+  line-height:1.55;font-size:15.5px;white-space:pre-wrap;overflow-wrap:anywhere;
+}
+.b strong{color:var(--or-clair)}
+.b code{background:rgba(255,255,255,.08);padding:1px 5px;border-radius:6px;font-size:.92em}
+.b.u{align-self:flex-end;background:linear-gradient(135deg,var(--or-clair),var(--or));color:#1b1505;border-bottom-right-radius:6px}
+.b.u strong{color:#1b1505}
+.b.a{align-self:flex-start;background:var(--encre2);border:1px solid var(--trait);border-bottom-left-radius:6px}
+.b.err{align-self:center;background:rgba(255,122,122,.1);border:1px solid rgba(255,122,122,.3);color:var(--alerte);font-size:14px;text-align:center}
+.typing{align-self:flex-start;display:flex;gap:5px;padding:14px 16px;background:var(--encre2);border:1px solid var(--trait);border-radius:18px;border-bottom-left-radius:6px}
+.typing i{width:7px;height:7px;border-radius:50%;background:var(--or);opacity:.35;animation:blink 1.1s infinite}
+.typing i:nth-child(2){animation-delay:.18s}
+.typing i:nth-child(3){animation-delay:.36s}
+@keyframes blink{0%,80%,100%{opacity:.3}40%{opacity:1}}
+
+.welcome{margin:auto 0;padding:8px 6px 20px;text-align:center}
+.word{
+  font-family:"ArabicText",Georgia,serif;font-size:66px;line-height:1.25;margin:0 0 6px;
+  background:linear-gradient(180deg,var(--or-clair),var(--or) 70%,#a8841c);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.hello{margin:0 auto 22px;max-width:290px;color:var(--brume);line-height:1.55;font-size:15px}
+.chips{display:flex;flex-direction:column;gap:9px;align-items:center}
+.chip{
+  width:100%;max-width:320px;padding:12px 16px;border-radius:14px;text-align:left;
+  background:var(--encre);border:1px solid var(--trait);color:var(--sable);font-size:15px;
+}
+.chip:active{background:var(--encre2)}
+
+.composer{
+  display:flex;gap:8px;align-items:flex-end;padding:10px 12px;
+  border-top:1px solid var(--trait);background:rgba(10,16,32,.92);
+}
+#ta{
+  flex:1;resize:none;max-height:120px;min-height:46px;padding:12px 16px;
+  border-radius:23px;border:1px solid var(--trait);background:var(--encre);
+  color:var(--sable);font-size:16px;line-height:1.35;outline:none;
+}
+#ta::placeholder{color:#6f7891}
+#ta:focus{border-color:var(--or)}
+.round{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;flex:none;border:1px solid var(--trait)}
+.round svg{width:22px;height:22px}
+#mic{background:var(--encre2);color:var(--or-clair)}
+#send{background:linear-gradient(135deg,var(--or-clair),var(--or));color:#1b1505;border:0}
+#send:disabled{opacity:.45}
+
+/* Outils */
+h2{font-size:20px;margin:0 0 4px;color:var(--or-clair)}
+.lead{margin:0 0 16px;color:var(--brume);font-size:14.5px;line-height:1.5}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.card{
+  padding:16px 14px;border-radius:16px;text-align:left;min-height:84px;
+  background:var(--encre);border:1px solid var(--trait);color:var(--sable);
+  display:flex;flex-direction:column;justify-content:space-between;gap:8px;font-size:15.5px;font-weight:600;
+}
+.card small{font-weight:400;color:var(--brume);font-size:12.5px;line-height:1.35}
+.card:active{background:var(--encre2)}
+.note{margin-top:16px;padding:12px 14px;border-radius:14px;border:1px dashed var(--trait);color:var(--brume);font-size:13.5px;line-height:1.5}
+
+/* Progrès */
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{padding:16px 14px;border-radius:16px;background:var(--encre);border:1px solid var(--trait)}
+.stat b{display:block;font-size:30px;color:var(--or-clair);line-height:1.1}
+.stat span{font-size:13px;color:var(--brume)}
+
+/* Bientôt */
+.soon{margin:auto;max-width:300px;text-align:center;padding:20px}
+.soon svg{width:46px;height:46px;color:var(--or);margin-bottom:10px}
+
+/* Navigation */
+nav{
+  display:flex;border-top:1px solid var(--trait);background:rgba(10,16,32,.97);
+  padding:5px 4px calc(env(safe-area-inset-bottom) + 5px);
+}
+nav button{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:6px 0 5px;border:0;background:none;color:var(--brume);font-size:11px;border-radius:12px;
+}
+nav button svg,nav button .glyph{width:23px;height:23px}
+nav button .glyph{display:grid;place-items:center;font-size:19px;font-weight:700;line-height:1;font-family:"ArabicText",Georgia,serif}
+nav button.active{color:var(--or-clair)}
+nav button.active::before{content:"";position:absolute;margin-top:-7px;width:26px;height:3px;border-radius:3px;background:var(--or)}
+nav button{position:relative}
+
+/* Réglages */
+#sheet{position:fixed;inset:0;display:none;align-items:flex-end;background:rgba(3,6,14,.7);z-index:20}
+#sheet.open{display:flex}
+.panel{
+  width:100%;max-height:92%;overflow-y:auto;padding:20px 18px calc(env(safe-area-inset-bottom) + 20px);
+  background:var(--encre);border-top:1px solid var(--or);border-radius:22px 22px 0 0;
+}
+.panel label{display:block;margin:14px 0 6px;font-size:14px;color:var(--or-clair)}
+.panel input{
+  width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--trait);
+  background:var(--nuit);color:var(--sable);font-size:15.5px;outline:none;
+}
+.panel input:focus{border-color:var(--or)}
+.hint{font-size:12.5px;color:var(--brume);margin-top:6px;line-height:1.45}
+.row{display:flex;gap:10px;margin-top:18px}
+.btn{flex:1;padding:13px;border-radius:13px;border:1px solid var(--trait);background:var(--encre2);color:var(--sable);font-size:15px;font-weight:600}
+.btn.main{background:linear-gradient(135deg,var(--or-clair),var(--or));color:#1b1505;border:0}
+.btn.danger{color:var(--alerte)}
+.panel details{margin-top:16px;border-top:1px solid var(--trait);padding-top:12px}
+.panel summary{color:var(--brume);font-size:14px;padding:6px 0}
+
+#toast{
+  position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 90px);transform:translateX(-50%) translateY(12px);
+  max-width:86%;padding:11px 16px;border-radius:14px;background:var(--encre2);border:1px solid var(--or);
+  color:var(--sable);font-size:14px;text-align:center;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:30;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <svg class="emblem" viewBox="0 0 40 40" fill="none" stroke="#d4af37" stroke-width="1.6" aria-hidden="true">
+    <rect x="9" y="9" width="22" height="22"/>
+    <rect x="9" y="9" width="22" height="22" transform="rotate(45 20 20)"/>
+    <circle cx="20" cy="20" r="4.2" fill="#d4af37" stroke="none"/>
+  </svg>
+  <div class="brand"><b>Lisaan</b><span id="sub">Discussion</span></div>
+  <div class="grow"></div>
+  <div class="dot" id="dot" title="Connexion"></div>
+  <button class="iconbtn" id="gear" aria-label="Réglages">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+  </button>
+</header>
+<div id="offline">Hors ligne. L'agent a besoin d'internet pour répondre.</div>
+
+<main>
+  <section class="view active" id="v-chat">
+    <div id="msgs" aria-live="polite"></div>
+    <div class="composer">
+      <button class="round" id="mic" aria-label="Parler">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+      </button>
+      <textarea id="ta" rows="1" placeholder="Écris ton message" aria-label="Message"></textarea>
+      <button class="round" id="send" aria-label="Envoyer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+      </button>
+    </div>
+  </section>
+
+  <section class="view" id="v-recherche">
+    <div class="soon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <h2>Recherche web</h2>
+      <p class="lead">Cette rubrique arrive dans la prochaine version. L'agent cherchera sur le web et citera ses sources.</p>
+    </div>
+  </section>
+
+  <section class="view" id="v-outils">
+    <div class="scroll">
+      <h2>Outils</h2>
+      <p class="lead">Touche un outil : le message se prépare dans la discussion, tu n'as plus qu'à compléter.</p>
+      <div class="grid" id="tools"></div>
+      <p class="note">Rappels et alarmes : disponibles dans une prochaine version.</p>
+    </div>
+  </section>
+
+  <section class="view" id="v-progres">
+    <div class="scroll">
+      <h2>Progrès</h2>
+      <p class="lead">Ton activité avec l'agent, enregistrée sur ce téléphone.</p>
+      <div class="stats" id="stats"></div>
+    </div>
+  </section>
+</main>
+
+<nav id="nav">
+  <button data-v="chat" class="active">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.5 7.2L4 20l1-4.2A8 8 0 1 1 21 12z"/></svg>
+    Discuter
+  </button>
+  <button data-v="arabe"><span class="glyph">ع</span>Arabe</button>
+  <button data-v="peulh"><span class="glyph">ɓ</span>Peulh</button>
+  <button data-v="recherche">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+    Recherche
+  </button>
+  <button data-v="outils">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 16l.7 1.8L21.5 18.5l-1.8.7L19 21l-.7-1.8-1.8-.7 1.8-.7z"/></svg>
+    Outils
+  </button>
+  <button data-v="progres">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>
+    Progrès
+  </button>
+</nav>
+
+<div id="sheet" role="dialog" aria-modal="true" aria-label="Réglages">
+  <div class="panel">
+    <h2>Réglages</h2>
+    <label for="inKey">Clé Gemini</label>
+    <input id="inKey" type="password" autocapitalize="off" autocomplete="off" placeholder="Colle ta clé Google AI Studio">
+    <p class="hint">Gratuite sur aistudio.google.com. Elle reste uniquement sur ce téléphone.</p>
+    <label for="inModel">Modèle (facultatif)</label>
+    <input id="inModel" type="text" autocapitalize="off" autocomplete="off" placeholder="gemini-2.5-flash">
+    <details>
+      <summary>Serveur Cloudflare (facultatif)</summary>
+      <label for="inUrl">Adresse du serveur</label>
+      <input id="inUrl" type="url" inputmode="url" autocapitalize="off" autocomplete="off" placeholder="https://lisaan.ton-compte.workers.dev">
+      <label for="inToken">Jeton de l'appli</label>
+      <input id="inToken" type="password" autocapitalize="off" autocomplete="off" placeholder="Le même jeton que sur le serveur">
+      <p class="hint">Si une adresse est renseignée, elle passe avant la clé Gemini.</p>
+    </details>
+    <div class="row">
+      <button class="btn" id="btnTest">Tester</button>
+      <button class="btn main" id="btnSave">Enregistrer</button>
+    </div>
+    <div class="row">
+      <button class="btn danger" id="btnClear">Effacer l'historique</button>
+      <button class="btn" id="btnClose">Fermer</button>
+    </div>
+  </div>
+</div>
+<div id="toast" role="status"></div>
+
+<script>
+(() => {
+"use strict";
+
+// Optionnel : colle ici l'adresse de ton serveur pour ne pas la saisir dans les réglages.
+const DEFAULT_WORKER_URL = "";
+
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+
+const TITLES = { chat: "Discussion", arabe: "Arabe", peulh: "Peulh", recherche: "Recherche", outils: "Outils", progres: "Progrès" };
+const MODES = {
+  chat: {
+    word: "لِسَان",
+    hello: "Pose une question ou confie-moi une tâche.",
+    chips: [["Rédige un message poli pour : ", 0], ["Explique-moi simplement : ", 0], ["Donne-moi un plan pour : ", 0]]
+  },
+  arabe: {
+    word: "العَرَبِيَّة",
+    hello: "On parle arabe ensemble. Je te réponds, je te corrige, tu progresses.",
+    chips: [["Commençons une conversation", 1], ["Les salutations du quotidien", 1], ["Corrige ma phrase : ", 0]]
+  },
+  peulh: {
+    word: "Pulaar",
+    hello: "On apprend le peulh pas à pas, avec des phrases de tous les jours.",
+    chips: [["Les salutations en pulaar", 1], ["Apprends-moi dix mots utiles", 1], ["Comment dit-on « merci » ?", 1]]
+  }
+};
+const TOOLS = [
+  ["Traduire", "Arabe, français, peulh", "Traduis en arabe et en français : "],
+  ["Résumer", "Un texte en cinq points", "Résume ce texte en cinq points : "],
+  ["Rédiger", "Message, lettre, annonce", "Rédige un message pour : "],
+  ["Corriger", "Orthographe et style", "Corrige ce texte sans changer le sens : "],
+  ["Expliquer", "Simplement, étape par étape", "Explique-moi simplement : "],
+  ["Trouver des idées", "Dix pistes à la fois", "Donne-moi dix idées pour : "]
+];
+
+let view = "chat", mode = "chat", busy = false, busyMode = null, lastError = null;
+
+const esc = s => s.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fmt = s => esc(s).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/`([^`]+)`/g, "<code>$1</code>");
+const getHist = m => store.get("lisaan.hist." + m, []);
+const setHist = (m, h) => store.set("lisaan.hist." + m, h.slice(-200));
+
+function toast(msg) {
+  const t = $("#toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => t.classList.remove("show"), 3200);
+}
+
+/* ---------- Chat ---------- */
+function bubble(cls, text) {
+  const d = document.createElement("div");
+  d.className = "b " + cls;
+  d.setAttribute("dir", "auto");
+  d.innerHTML = fmt(text);
+  return d;
+}
+function welcomeEl() {
+  const cfg = MODES[mode];
+  const w = document.createElement("div");
+  w.className = "welcome";
+  w.innerHTML = '<p class="word" dir="auto"></p><p class="hello"></p><div class="chips"></div>';
+  $(".word", w).textContent = cfg.word;
+  $(".hello", w).textContent = cfg.hello;
+  const box = $(".chips", w);
+  cfg.chips.forEach(([text, auto]) => {
+    const b = document.createElement("button");
+    b.className = "chip";
+    b.textContent = text.trim();
+    b.addEventListener("click", () => {
+      if (auto) { send(text); }
+      else { const ta = $("#ta"); ta.value = text; autosize(); ta.focus(); }
+    });
+    box.appendChild(b);
+  });
+  return w;
+}
+function typingEl() {
+  const t = document.createElement("div");
+  t.className = "typing";
+  t.innerHTML = "<i></i><i></i><i></i>";
+  return t;
+}
+function renderChat() {
+  const box = $("#msgs");
+  const h = getHist(mode);
+  box.innerHTML = "";
+  if (!h.length) box.appendChild(welcomeEl());
+  else h.forEach(m => box.appendChild(bubble(m.role === "user" ? "u" : "a", m.content)));
+  if (busy && busyMode === mode) box.appendChild(typingEl());
+  if (lastError && lastError.mode === mode) box.appendChild(bubble("err", lastError.msg));
+  box.scrollTop = box.scrollHeight;
+}
+function autosize() {
+  const ta = $("#ta");
+  ta.style.height = "auto";
+  ta.style.height = Math.min(ta.scrollHeight, 120) + "px";
+}
+function setSendState() { $("#send").disabled = busy; }
+
+function serverUrl() { return (store.get("lisaan.url", "") || DEFAULT_WORKER_URL).trim(); }
+
+async function callServer(url, token, payload, ms) {
+  const ctrl = new AbortController();
+  const to = setTimeout(() => ctrl.abort(), ms);
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-App-Token": token || "" },
+      body: JSON.stringify(payload),
+      signal: ctrl.signal
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.reply) throw new Error(data.error || ("Erreur " + res.status));
+    return data.reply;
+  } finally { clearTimeout(to); }
+}
+
+const SYSTEMS = {
+  chat: `Tu es Lisaan, l'assistant personnel de l'utilisateur, intégré à une appli mobile.
+- Réponds en français par défaut, ou dans la langue que l'utilisateur emploie.
+- Réponses claires et assez courtes, lisibles sur un écran de téléphone.
+- L'utilisateur vit au Sénégal : adapte tes exemples (FCFA, contexte local) quand c'est utile.
+- Si tu ne sais pas ou si tu n'es pas sûr, dis-le. N'invente jamais un fait.
+- Dans cette version, tu n'as pas accès au web : ne prétends pas avoir cherché en ligne.`,
+  arabe: `Mode tuteur d'arabe. L'utilisateur sait déjà lire l'arabe et veut progresser vite par la conversation.
+- Parle surtout en arabe standard moderne simple. Mets les voyelles (tachkil) sur les phrases d'apprentissage.
+- Après chaque phrase arabe : la prononciation en lettres latines, puis la traduction en français.
+- Quand l'utilisateur écrit en arabe, corrige ses erreurs avec bienveillance : phrase corrigée + une courte explication.
+- Termine souvent par une question courte pour relancer la conversation.
+- Ne propose un dialecte que si l'utilisateur le demande.`,
+  peulh: `Mode tuteur de peulh (pulaar) tel qu'il est parlé au Sénégal.
+- Écris en alphabet latin standard (avec ɓ, ɗ, ƴ, ŋ), toujours avec la traduction française.
+- Sois honnête sur tes limites : le peulh est une langue pour laquelle tu as moins de données. Si tu n'es pas sûr d'un mot, d'une conjugaison ou d'une variante régionale, dis-le clairement et conseille de vérifier avec un locuteur natif.
+- N'invente jamais de mots.
+- Commence par des phrases courtes du quotidien et pose une seule question à la fois.`
+};
+const SYSTEM_BASE = SYSTEMS.chat;
+
+async function callGeminiDirect(key, model, m, messages, ms) {
+  const ctrl = new AbortController();
+  const to = setTimeout(() => ctrl.abort(), ms);
+  try {
+    const merged = [];
+    for (const x of messages) {
+      const last = merged[merged.length - 1];
+      if (last && last.role === x.role) last.content += "\n\n" + x.content;
+      else merged.push({ role: x.role, content: x.content });
+    }
+    while (merged.length && merged[0].role !== "user") merged.shift();
+    const today = new Date().toISOString().slice(0, 10);
+    const system = (m === "chat" ? SYSTEM_BASE : SYSTEM_BASE + "\n\n" + SYSTEMS[m]) + "\n\nDate du jour : " + today + ".";
+    const url = "https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model || "gemini-2.5-flash") + ":generateContent";
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: system }] },
+        contents: merged.map(x => ({ role: x.role === "assistant" ? "model" : "user", parts: [{ text: x.content }] })),
+        generationConfig: { maxOutputTokens: 2000 }
+      }),
+      signal: ctrl.signal
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error((data.error && data.error.message) || ("Erreur " + res.status));
+    if (data.promptFeedback && data.promptFeedback.blockReason) throw new Error("Message bloqué par le filtre de sécurité de Gemini.");
+    const parts = (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) || [];
+    const reply = parts.map(p => p.text || "").join("").trim();
+    if (!reply) throw new Error("Réponse vide de Gemini. Reformule ta demande.");
+    return reply;
+  } finally { clearTimeout(to); }
+}
+
+async function ask(m, messages, ms, cfg) {
+  cfg = cfg || {
+    url: serverUrl(),
+    token: store.get("lisaan.token", ""),
+    key: store.get("lisaan.key", ""),
+    model: store.get("lisaan.model", "")
+  };
+  if (cfg.url) return callServer(cfg.url, cfg.token, { mode: m, messages }, ms);
+  if (cfg.key) return callGeminiDirect(cfg.key, cfg.model, m, messages, ms);
+  throw new Error("Aucune connexion configurée. Ouvre les réglages.");
+}
+
+function bump(m) {
+  const s = store.get("lisaan.stats", { total: 0, modes: {}, days: [] });
+  s.total++;
+  s.modes[m] = (s.modes[m] || 0) + 1;
+  const d = new Date().toISOString().slice(0, 10);
+  if (!s.days.includes(d)) s.days.push(d);
+  store.set("lisaan.stats", s);
+}
+
+async function send(preset) {
+  if (busy) return;
+  const ta = $("#ta");
+  const text = (typeof preset === "string" ? preset : ta.value).trim();
+  if (!text) return;
+  if (!serverUrl() && !store.get("lisaan.key", "")) { toast("Ajoute ta clé Gemini dans les réglages."); openSheet(); return; }
+  if (!navigator.onLine) { toast("Pas de connexion. L'agent a besoin d'internet."); return; }
+
+  const m = mode;
+  const h = getHist(m);
+  h.push({ role: "user", content: text });
+  setHist(m, h);
+  ta.value = "";
+  autosize();
+  lastError = null;
+  busy = true; busyMode = m;
+  setSendState();
+  renderChat();
+
+  try {
+    const messages = getHist(m).slice(-16).map(x => ({ role: x.role, content: x.content }));
+    const reply = await ask(m, messages, 60000);
+    const h2 = getHist(m);
+    h2.push({ role: "assistant", content: reply });
+    setHist(m, h2);
+    bump(m);
+  } catch (e) {
+    lastError = {
+      mode: m,
+      msg: e.name === "AbortError" ? "Le serveur met trop de temps à répondre. Réessaie." : (e.message || "L'envoi a échoué. Réessaie.")
+    };
+  } finally {
+    busy = false; busyMode = null;
+    setSendState();
+    if ((view === "chat" || view === "arabe" || view === "peulh") && mode === m) renderChat();
+  }
+}
+
+/* ---------- Rubriques ---------- */
+function setView(v) {
+  view = v;
+  $$(".view").forEach(el => el.classList.remove("active"));
+  if (MODES[v]) { mode = v; $("#v-chat").classList.add("active"); renderChat(); }
+  else $("#v-" + v).classList.add("active");
+  $$("#nav button").forEach(b => b.classList.toggle("active", b.dataset.v === v));
+  $("#sub").textContent = TITLES[v];
+  if (v === "progres") renderProgress();
+}
+
+function renderTools() {
+  const g = $("#tools");
+  TOOLS.forEach(([name, desc, prompt]) => {
+    const b = document.createElement("button");
+    b.className = "card";
+    b.innerHTML = "<span></span><small></small>";
+    $("span", b).textContent = name;
+    $("small", b).textContent = desc;
+    b.addEventListener("click", () => {
+      setView("chat");
+      const ta = $("#ta");
+      ta.value = prompt;
+      autosize();
+      ta.focus();
+    });
+    g.appendChild(b);
+  });
+}
+
+function streak(days) {
+  const set = new Set(days);
+  const key = x => x.toISOString().slice(0, 10);
+  const d = new Date();
+  if (!set.has(key(d))) d.setDate(d.getDate() - 1);
+  let n = 0;
+  while (set.has(key(d))) { n++; d.setDate(d.getDate() - 1); }
+  return n;
+}
+function renderProgress() {
+  const s = store.get("lisaan.stats", { total: 0, modes: {}, days: [] });
+  const items = [
+    [s.total, "échanges avec l'agent"],
+    [s.days.length, "jours d'activité"],
+    [streak(s.days), "jours d'affilée"],
+    [(s.modes.arabe || 0) + (s.modes.peulh || 0), "échanges de langue"]
+  ];
+  const box = $("#stats");
+  box.innerHTML = "";
+  items.forEach(([n, label]) => {
+    const d = document.createElement("div");
+    d.className = "stat";
+    d.innerHTML = "<b></b><span></span>";
+    $("b", d).textContent = n;
+    $("span", d).textContent = label;
+    box.appendChild(d);
+  });
+}
+
+/* ---------- Réglages ---------- */
+function openSheet() {
+  $("#inUrl").value = store.get("lisaan.url", "") || DEFAULT_WORKER_URL;
+  $("#inToken").value = store.get("lisaan.token", "");
+  $("#inKey").value = store.get("lisaan.key", "");
+  $("#inModel").value = store.get("lisaan.model", "");
+  $("#sheet").classList.add("open");
+}
+function closeSheet() { $("#sheet").classList.remove("open"); }
+
+async function testServer() {
+  const cfg = {
+    url: $("#inUrl").value.trim(),
+    token: $("#inToken").value.trim(),
+    key: $("#inKey").value.trim(),
+    model: $("#inModel").value.trim()
+  };
+  if (!cfg.url && !cfg.key) { toast("Entre d'abord ta clé Gemini."); return; }
+  if (!navigator.onLine) { toast("Pas de connexion."); return; }
+  toast("Test en cours…");
+  try {
+    const r = await ask("chat", [{ role: "user", content: "Réponds seulement : prêt." }], 30000, cfg);
+    toast("Connecté : " + r.slice(0, 40));
+  } catch (e) {
+    toast("Échec : " + (e.message || "injoignable"));
+  }
+}
+
+let clearArmed = false;
+function clearHistory() {
+  const b = $("#btnClear");
+  if (!clearArmed) {
+    clearArmed = true;
+    b.textContent = "Touche encore pour confirmer";
+    setTimeout(() => { clearArmed = false; b.textContent = "Effacer l'historique"; }, 4000);
+    return;
+  }
+  Object.keys(MODES).forEach(m => store.set("lisaan.hist." + m, []));
+  clearArmed = false;
+  b.textContent = "Effacer l'historique";
+  lastError = null;
+  renderChat();
+  toast("Historique effacé.");
+}
+
+/* ---------- Connexion ---------- */
+function updateOnline() {
+  const on = navigator.onLine;
+  $("#dot").classList.toggle("off", !on);
+  $("#offline").classList.toggle("show", !on);
+}
+
+/* ---------- Démarrage ---------- */
+$("#nav").addEventListener("click", e => {
+  const b = e.target.closest("button");
+  if (b) setView(b.dataset.v);
+});
+$("#send").addEventListener("click", () => send());
+$("#mic").addEventListener("click", () => toast("La voix arrive dans la prochaine version."));
+$("#ta").addEventListener("input", autosize);
+$("#gear").addEventListener("click", openSheet);
+$("#btnClose").addEventListener("click", closeSheet);
+$("#sheet").addEventListener("click", e => { if (e.target.id === "sheet") closeSheet(); });
+$("#btnSave").addEventListener("click", () => {
+  store.set("lisaan.url", $("#inUrl").value.trim());
+  store.set("lisaan.token", $("#inToken").value.trim());
+  store.set("lisaan.key", $("#inKey").value.trim());
+  store.set("lisaan.model", $("#inModel").value.trim());
+  closeSheet();
+  toast("Réglages enregistrés.");
+});
+$("#btnTest").addEventListener("click", testServer);
+$("#btnClear").addEventListener("click", clearHistory);
+window.addEventListener("online", updateOnline);
+window.addEventListener("offline", updateOnline);
+
+renderTools();
+setView("chat");
+updateOnline();
+if (!serverUrl() && !store.get("lisaan.key", "")) setTimeout(() => toast("Première utilisation : ouvre les réglages pour ajouter ta clé Gemini."), 600);
+})();
+</script>
+</body>
+</html>
